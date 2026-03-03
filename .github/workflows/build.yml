@@ -1,0 +1,104 @@
+name: Build QMK Firmware
+
+on:
+  push:
+    branches: ["main", "master"]
+    paths:
+      - "keyboards/**"
+      - "layouts/**"
+      - "qmk.json"
+      - "scripts/**"
+      - ".github/workflows/build.yml"
+  pull_request:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+jobs:
+  # Generate the build matrix dynamically from qmk.json
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate build matrix from qmk.json
+        id: read
+        run: |
+          matrix=$(jq -c '[.keyboards[] | {
+            keyboard: .keyboard,
+            keymap:   .keymap,
+            repo:     .repo,
+            ref:      .ref,
+            name:     (.keyboard | gsub("/"; "_"))
+          }]' qmk.json)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # build all boards even if one fails
+      matrix:
+        include: ${{ fromJson(needs.setup.outputs.matrix) }}
+
+    name: "${{ matrix.keyboard }}:${{ matrix.keymap }} @ ${{ matrix.ref }}"
+
+    steps:
+      - name: Checkout userspace
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            gcc-arm-none-eabi \
+            avr-libc \
+            gcc-avr \
+            python3-pip \
+            python3-setuptools \
+            git \
+            jq
+
+      - name: Build ${{ matrix.keyboard }}
+        run: |
+          chmod +x scripts/build_keyboard.sh
+          bash scripts/build_keyboard.sh \
+            "${{ matrix.keyboard }}" \
+            "${{ matrix.keymap }}" \
+            "${{ matrix.repo }}" \
+            "${{ matrix.ref }}" \
+            "${{ matrix.type }}" \
+            "$GITHUB_WORKSPACE"
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.name }}-${{ github.sha }}
+          path: firmware/
+          if-no-files-found: warn
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
+
+    steps:
+      - name: Download all firmware artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all_firmware
+          pattern: firmware-*
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "Build #${{ github.run_number }}"
+          body: |
+            Automated firmware build from commit ${{ github.sha }}.
+            Per-board versions are defined in [qmk.json](https://github.com/${{ github.repository }}/blob/master/qmk.json).
+          files: all_firmware/*
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

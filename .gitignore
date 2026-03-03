@@ -1,0 +1,23 @@
+# Compiled firmware files (built locally - not committed)
+*.hex
+*.bin
+*.uf2
+*.elf
+*.map
+
+# QMK build artifacts
+.build/
+
+# Local QMK firmware clones (shared, repo-root cache)
+.qmk_*/
+
+# Local QMK config overrides
+.qmk/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+*.swp
+*~
