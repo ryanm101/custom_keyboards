@@ -59,6 +59,12 @@ git fetch origin
 git checkout "$REF"
 git submodule update --init --recursive
 
+# Install repo-specific Python dependencies (needed for Keychron fork etc.)
+if [ -f "$FIRMWARE_DIR/requirements.txt" ]; then
+  echo "→ Installing Python dependencies ..."
+  python3 -m pip install --user -r "$FIRMWARE_DIR/requirements.txt" --quiet
+fi
+
 # Copy our keymap into firmware tree
 KEYMAP_SRC="$USERSPACE_DIR/keyboards/$KEYBOARD/keymaps/$KEYMAP"
 KEYMAP_DST="$FIRMWARE_DIR/keyboards/$KEYBOARD/keymaps/$KEYMAP"
