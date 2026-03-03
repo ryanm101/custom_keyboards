@@ -61,8 +61,12 @@ git submodule update --init --recursive
 
 # Install repo-specific Python dependencies (needed for Keychron fork etc.)
 if [ -f "$FIRMWARE_DIR/requirements.txt" ]; then
-  echo "→ Installing Python dependencies ..."
-  python3 -m pip install --user -r "$FIRMWARE_DIR/requirements.txt" --quiet
+  echo "→ Creating uv virtual environment for Python dependencies ..."
+  uv venv "$FIRMWARE_DIR/.venv" --quiet
+  echo "→ Installing Python dependencies via uv ..."
+  uv pip install -p "$FIRMWARE_DIR/.venv" -r "$FIRMWARE_DIR/requirements.txt" --quiet
+  # Activate venv for subsequent qmk commands
+  source "$FIRMWARE_DIR/.venv/bin/activate"
 fi
 
 # Copy our keymap into firmware tree
