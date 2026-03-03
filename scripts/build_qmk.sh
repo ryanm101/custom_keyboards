@@ -66,16 +66,25 @@ cd "$FIRMWARE_DIR"
 echo "→ Checking out $REF ..."
 git fetch origin
 git checkout "$REF"
-git submodule update --init --recursive
+
+# Only update submodules if the HEAD commit actually changed (saves ~30s per board).
+CURRENT_HEAD="$(git rev-parse HEAD)"
+if [ ! -f "$FIRMWARE_DIR/.last_submodule_sync" ] || \
+   [ "$(cat "$FIRMWARE_DIR/.last_submodule_sync")" != "$CURRENT_HEAD" ]; then
+  echo "→ Updating submodules ..."
+  git submodule update --init --recursive
+  echo "$CURRENT_HEAD" > "$FIRMWARE_DIR/.last_submodule_sync"
+fi
 
 # Install repo-specific Python dependencies (needed for Keychron fork etc.)
 if [ -f "$FIRMWARE_DIR/requirements.txt" ]; then
   echo "→ Creating uv virtual environment for Python dependencies ..."
-  uv venv "$FIRMWARE_DIR/.venv" --quiet
+  # --clear avoids the interactive 'replace venv?' prompt
+  uv venv "$FIRMWARE_DIR/.venv" --clear --quiet
   echo "→ Installing Python dependencies via uv ..."
-  uv pip install -p "$FIRMWARE_DIR/.venv" -r "$FIRMWARE_DIR/requirements.txt" --quiet
-  # Activate venv for subsequent qmk commands
+  # Activate first, then install (no deprecated -p flag)
   source "$FIRMWARE_DIR/.venv/bin/activate"
+  uv pip install -r "$FIRMWARE_DIR/requirements.txt" --quiet
 fi
 
 # Copy our keymap into firmware tree
@@ -98,10 +107,13 @@ fi
 echo "→ Compiling ..."
 make "${KEYBOARD}:${KEYMAP}"
 
-# Collect firmware output
+# Collect firmware output — match only this keyboard's files to avoid
+# copying bootloader hexes, ELFs, and other boards' artefacts.
 mkdir -p "$REPO_ROOT/firmware"
-find "$FIRMWARE_DIR" -maxdepth 2 \( -path "*/\.build/*" -o -name "*.hex" -o -name "*.bin" -o -name "*.uf2" \) \
-  -exec cp -f {} "$REPO_ROOT/firmware/" \; 2>/dev/null || true
+for ext in hex bin uf2; do
+  find "$FIRMWARE_DIR" -maxdepth 2 -name "${KEYBOARD_SLUG}_${KEYMAP}.${ext}" \
+    -exec cp -f {} "$REPO_ROOT/firmware/" \; 2>/dev/null || true
+done
 
 # Find the newly built firmware
 NEW_FW="$(find "$REPO_ROOT/firmware" -maxdepth 1 \

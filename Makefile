@@ -5,102 +5,75 @@ KEYMAP        := ryanm101
 
 # Read per-board config from qmk.json (requires jq)
 define board_repo
-$(shell jq -r '.keyboards[] | select(.keyboard == "$(1)") | .repo' $(QMK_JSON))
+$(shell jq -r '.keyboards[] | select(.keyboard == "$(1)") | .repo' $(QMK_JSON) | head -1)
 endef
 define board_ref
-$(shell jq -r '.keyboards[] | select(.keyboard == "$(1)") | .ref' $(QMK_JSON))
+$(shell jq -r '.keyboards[] | select(.keyboard == "$(1)") | .ref' $(QMK_JSON) | head -1)
 endef
 
-.PHONY: all all-qmk all-zmk jj40 discipline winry315 k3pro cck-ball \
-        flash-jj40 flash-discipline flash-winry315 flash-k3pro \
-        clean clean-cache help
+# Generic QMK build + flash macro.
+# Usage: $(eval $(call qmk_board,<target-name>,<keyboard/path>))
+define qmk_board
+.PHONY: $(1) flash-$(1)
+
+$(1): ## Build $(2)
+	bash scripts/build_qmk.sh \
+		"$(2)" \
+		"$(KEYMAP)" \
+		"$(call board_repo,$(2))" \
+		"$(call board_ref,$(2))" \
+		"$(QMK_DIR)" \
+		"$(REPO_ROOT)"
+
+flash-$(1): ## Flash $(2)  [put board in bootloader first]
+	bash scripts/build_qmk.sh \
+		"$(2)" \
+		"$(KEYMAP)" \
+		"$(call board_repo,$(2))" \
+		"$(call board_ref,$(2))" \
+		"$(QMK_DIR)" \
+		"$(REPO_ROOT)" flash
+endef
+
+.PHONY: all all-qmk all-zmk cck-ball clean clean-cache help
 
 help: ## Show this help and per-board config
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "  Per-board config (from qmk.json):"
-	@jq -r '.keyboards[] | "    \(.keyboard): \(.repo) @ \(.ref)"' $(QMK_JSON)
+	@jq -r '.keyboards[] | "    \(.keyboard) [\(.keymap)]: \(.repo) @ \(.ref)"' $(QMK_JSON)
 
 all: all-qmk all-zmk ## Build all boards (QMK + ZMK)
 
-all-qmk: jj40 discipline winry315 k3pro ## Build all QMK boards
+all-qmk: jj40 discipline winry315 winry315-freecad k3pro ## Build all QMK boards
 
 all-zmk: cck-ball ## Build all ZMK boards
 
-jj40: ## Build kprepublic/jj40 (shares QMK clone with winry315)
-	bash scripts/build_qmk.sh \
-		"kprepublic/jj40" \
-		"$(KEYMAP)" \
-		"$(call board_repo,kprepublic/jj40)" \
-		"$(call board_ref,kprepublic/jj40)" \
-		"$(QMK_DIR)" \
-		"$(REPO_ROOT)"
+# ── QMK board targets (generated via macro) ────────────────────────────────────
+$(eval $(call qmk_board,jj40,kprepublic/jj40))
+$(eval $(call qmk_board,discipline,coseyfannitutti/discipline))
+$(eval $(call qmk_board,winry315,winry/winry315))
+$(eval $(call qmk_board,k3pro,keychron/k3_pro/iso/rgb))
 
-discipline: ## Build coseyfannitutti/discipline
-	bash scripts/build_qmk.sh \
-		"coseyfannitutti/discipline" \
-		"$(KEYMAP)" \
-		"$(call board_repo,coseyfannitutti/discipline)" \
-		"$(call board_ref,coseyfannitutti/discipline)" \
-		"$(QMK_DIR)" \
-		"$(REPO_ROOT)"
+# winry315 freecad keymap — overrides the default KEYMAP
+.PHONY: winry315-freecad flash-winry315-freecad
 
-winry315: ## Build winry/winry315 (shares QMK clone with jj40)
+winry315-freecad: ## Build winry/winry315 with freecad keymap
 	bash scripts/build_qmk.sh \
 		"winry/winry315" \
-		"$(KEYMAP)" \
+		"freecad" \
 		"$(call board_repo,winry/winry315)" \
 		"$(call board_ref,winry/winry315)" \
 		"$(QMK_DIR)" \
 		"$(REPO_ROOT)"
 
-k3pro: ## Build Keychron K3 Pro (separate Keychron fork clone)
-	bash scripts/build_qmk.sh \
-		"keychron/k3_pro/iso/rgb" \
-		"$(KEYMAP)" \
-		"$(call board_repo,keychron/k3_pro/iso/rgb)" \
-		"$(call board_ref,keychron/k3_pro/iso/rgb)" \
-		"$(QMK_DIR)" \
-		"$(REPO_ROOT)"
-
-
-# ── Flash targets ──────────────────────────────────────────────────────────────
-# Put the keyboard into bootloader mode before running these.
-
-flash-jj40: ## Flash kprepublic/jj40
-	bash scripts/build_qmk.sh \
-		"kprepublic/jj40" \
-		"$(KEYMAP)" \
-		"$(call board_repo,kprepublic/jj40)" \
-		"$(call board_ref,kprepublic/jj40)" \
-		"$(QMK_DIR)" \
-		"$(REPO_ROOT)" flash
-
-flash-discipline: ## Flash coseyfannitutti/discipline
-	bash scripts/build_qmk.sh \
-		"coseyfannitutti/discipline" \
-		"$(KEYMAP)" \
-		"$(call board_repo,coseyfannitutti/discipline)" \
-		"$(call board_ref,coseyfannitutti/discipline)" \
-		"$(QMK_DIR)" \
-		"$(REPO_ROOT)" flash
-
-flash-winry315: ## Flash winry/winry315
+flash-winry315-freecad: ## Flash winry/winry315 freecad keymap  [put board in bootloader first]
 	bash scripts/build_qmk.sh \
 		"winry/winry315" \
-		"$(KEYMAP)" \
+		"freecad" \
 		"$(call board_repo,winry/winry315)" \
 		"$(call board_ref,winry/winry315)" \
-		"$(QMK_DIR)" \
-		"$(REPO_ROOT)" flash
-
-flash-k3pro: ## Flash Keychron K3 Pro
-	bash scripts/build_qmk.sh \
-		"keychron/k3_pro/iso/rgb" \
-		"$(KEYMAP)" \
-		"$(call board_repo,keychron/k3_pro/iso/rgb)" \
-		"$(call board_ref,keychron/k3_pro/iso/rgb)" \
 		"$(QMK_DIR)" \
 		"$(REPO_ROOT)" flash
 
@@ -111,8 +84,10 @@ cck-ball: ## Build CCK-BALL (left + right + settings_reset) via Docker
 	bash scripts/build_zmk.sh "$(REPO_ROOT)/zmk/cck_ball" "$(REPO_ROOT)"
 
 
+# ── Utility targets ────────────────────────────────────────────────────────────
+
 clean: ## Remove built firmware files
-	@rm -f firmware/*.hex firmware/*.bin firmware/*.uf2
+	@rm -f firmware/*.hex firmware/*.bin firmware/*.uf2 firmware/*.elf
 	@echo "✓ Cleaned"
 
 clean-cache: ## Remove cached QMK/ZMK clones

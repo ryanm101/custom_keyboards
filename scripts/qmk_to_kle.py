@@ -22,9 +22,14 @@ def generate_kle(layout_data):
         y = key.get('y', 0)
         w = key.get('w', 1)
         h = key.get('h', 1)
-        label = key.get('label', key.get('matrix', [0,0])[0])
-        if type(label) is list:
-            label = f"{label[0]},{label[1]}"
+        matrix = key.get('matrix', None)
+        label = key.get('label', None)
+        if label is None:
+            # Use R,C notation when no explicit label is given
+            if matrix:
+                label = f"R{matrix[0]},C{matrix[1]}"
+            else:
+                label = f"R?,C?"
         label = str(label)
         
         # Check if we moved to a new row in coordinate space
@@ -93,5 +98,11 @@ def process(file_path, out_path, layout_name=None):
     print(f"Generated {out_path} using layout {layout_key}")
 
 if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: qmk_to_kle.py <keyboard.json> <output.json> [LAYOUT_name]")
+        print("  keyboard.json  — QMK keyboard.json or info.json (must contain 'layouts')")
+        print("  output.json    — path to write the KLE JSON array")
+        print("  LAYOUT_name    — optional specific layout key, e.g. LAYOUT_iso_85")
+        sys.exit(1)
     layout_name = sys.argv[3] if len(sys.argv) > 3 else None
     process(sys.argv[1], sys.argv[2], layout_name)

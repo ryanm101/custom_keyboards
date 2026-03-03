@@ -14,6 +14,12 @@
       "ref": "master"
     },
     {
+      "keyboard": "winry/winry315",
+      "keymap": "freecad",
+      "repo": "https://github.com/qmk/qmk_firmware.git",
+      "ref": "master"
+    },
+    {
       "keyboard": "coseyfannitutti/discipline",
       "keymap": "ryanm101",
       "repo": "https://github.com/qmk/qmk_firmware.git",

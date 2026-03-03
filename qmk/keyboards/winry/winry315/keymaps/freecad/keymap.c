@@ -9,11 +9,10 @@ enum layers {
 
 // Custom keycodes for multi-key FreeCAD sequences (e.g. "V" then "F")
 enum custom_keycodes {
-  VC_VF = SAFE_RANGE, // View -> Fit all (FreeCAD default: V then F)
-  VC_VT,              // V then T (Top)
-  VC_VI,              // V then I (Isometric)
-  VC_VFRT,            // V then F (Front) - if you choose to bind it so
-  VC_VR,              // V then R (Right)
+  VC_VF = SAFE_RANGE, // View -> Fit all   (V, F)
+  VC_VT,              // View -> Top        (V, T)
+  VC_VI,              // View -> Isometric  (V, I)
+  VC_VR,              // View -> Right      (V, R)
 };
 
 static void tap_v_then(uint16_t key) {
@@ -121,7 +120,8 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
       // Sketcher: nudge active numeric field (constraint value etc.)
       tap_code16(clockwise ? KC_UP : KC_DOWN);
     } else {
-      // General: Undo / Redo
+      // General: Undo (Ctrl+Z) / Redo (Ctrl+Y).
+      // NOTE: FreeCAD uses Ctrl+Y for redo (non-standard but correct).
       tap_code16(clockwise ? LCTL(KC_Y) : LCTL(KC_Z));
     }
     return false;
