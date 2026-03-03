@@ -37,7 +37,16 @@ if [ "$ACTION" = "flash" ] && [ -n "$EXISTING_FW" ]; then
   echo "    Using existing firmware: $(basename "$EXISTING_FW")"
   echo "    (Put keyboard in bootloader mode now)"
   echo ""
-  qmk flash "$EXISTING_FW"
+  
+  # QMK internal flashers lock onto their home workspace and strip paths.
+  # So we copy the firmware temporarily into the qmk repo root.
+  FW_NAME="$(basename "$EXISTING_FW")"
+  cp "$EXISTING_FW" "$FIRMWARE_DIR/$FW_NAME"
+  cd "$FIRMWARE_DIR"
+  qmk flash "$FW_NAME"
+  cd - > /dev/null
+  rm -f "$FIRMWARE_DIR/$FW_NAME"
+  
   echo "✓ Done: $KEYBOARD:$KEYMAP"
   exit 0
 fi
@@ -85,18 +94,35 @@ if [ -d "$USERS_SRC" ]; then
   cp -r "$USERS_SRC/." "$USERS_DST/"
 fi
 
-# Build or build+flash
-if [ "$ACTION" = "flash" ]; then
-  echo "→ Compiling + flashing (put keyboard in bootloader mode now) ..."
-  make "${KEYBOARD}:${KEYMAP}:flash"
-else
-  echo "→ Compiling ..."
-  make "${KEYBOARD}:${KEYMAP}"
-fi
+# Build
+echo "→ Compiling ..."
+make "${KEYBOARD}:${KEYMAP}"
 
 # Collect firmware output
 mkdir -p "$REPO_ROOT/firmware"
-find "$FIRMWARE_DIR" -maxdepth 1 \( -name "*.hex" -o -name "*.bin" -o -name "*.uf2" \) \
-  -exec cp {} "$REPO_ROOT/firmware/" \; 2>/dev/null || true
+find "$FIRMWARE_DIR" -maxdepth 2 \( -path "*/\.build/*" -o -name "*.hex" -o -name "*.bin" -o -name "*.uf2" \) \
+  -exec cp -f {} "$REPO_ROOT/firmware/" \; 2>/dev/null || true
+
+# Find the newly built firmware
+NEW_FW="$(find "$REPO_ROOT/firmware" -maxdepth 1 \
+  \( -name "${KEYBOARD_SLUG}_${KEYMAP}.hex" \
+  -o -name "${KEYBOARD_SLUG}_${KEYMAP}.bin" \
+  -o -name "${KEYBOARD_SLUG}_${KEYMAP}.uf2" \) 2>/dev/null | head -1 || true)"
+
+if [ "$ACTION" = "flash" ]; then
+  if [ -n "$NEW_FW" ]; then
+    echo "→ Flashing (put keyboard in bootloader mode now) ..."
+    
+    FW_NAME="$(basename "$NEW_FW")"
+    cp "$NEW_FW" "$FIRMWARE_DIR/$FW_NAME"
+    cd "$FIRMWARE_DIR"
+    qmk flash "$FW_NAME"
+    cd - > /dev/null
+    rm -f "$FIRMWARE_DIR/$FW_NAME"
+  else
+    echo "❌ Error: Could not find generated firmware for $KEYBOARD_SLUG_$KEYMAP to flash."
+    exit 1
+  fi
+fi
 
 echo "✓ Done: $KEYBOARD:$KEYMAP"
