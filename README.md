@@ -40,12 +40,12 @@ custom_boards/
 │       ├── config/                     #   west.yml, keymap, conf, shields
 │       └── build.yaml                  #   build matrix
 ├── scripts/
-│   ├── build_keyboard.sh              #   QMK build script
-│   └── build_zmk.sh                   #   ZMK build script (Docker)
+│   ├── build_qmk.sh                  #   QMK build script
+│   └── build_zmk.sh                  #   ZMK build script (Docker)
 ├── Makefile
 └── .github/workflows/
-    ├── build.yml                       #   QMK CI
-    └── build_zmk.yml                   #   ZMK CI
+    ├── build_qmk.yml                  #   QMK CI
+    └── build_zmk.yml                  #   ZMK CI
 ```
 
 ## Building Locally
@@ -115,7 +115,7 @@ ZMK behaviors and macros are defined in `zmk/cck_ball/config/cck_ball.keymap`. F
 
 | Workflow | File                              | Boards                            | Trigger  |
 | -------- | --------------------------------- | --------------------------------- | -------- |
-| QMK      | `.github/workflows/build.yml`     | JJ40, Discipline, Winry315, K3Pro | `qmk/**` |
+| QMK      | `.github/workflows/build_qmk.yml` | JJ40, Discipline, Winry315, K3Pro | `qmk/**` |
 | ZMK      | `.github/workflows/build_zmk.yml` | CCK-BALL                          | `zmk/**` |
 
 ## Adding a New Keyboard

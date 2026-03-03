@@ -6,7 +6,7 @@ on:
     paths:
       - "qmk/**"
       - "scripts/**"
-      - ".github/workflows/build.yml"
+      - ".github/workflows/build_qmk.yml"
   pull_request:
     branches: ["main", "master"]
   workflow_dispatch:
