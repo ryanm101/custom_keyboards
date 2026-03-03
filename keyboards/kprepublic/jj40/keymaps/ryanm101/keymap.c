@@ -5,9 +5,8 @@
 // Tap dances are defined in users/ryanm101/tap_dances.h
 
 #include QMK_KEYBOARD_H
+#include "shared_macros.h"
 #include "tap_dances.h"
-
-#define LCKSCR LCTL(LGUI(KC_Q))
 
 #define _QWERTY 0
 #define _L1 1

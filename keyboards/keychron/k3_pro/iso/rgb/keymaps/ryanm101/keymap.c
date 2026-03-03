@@ -48,7 +48,7 @@ void cmd_dance(tap_dance_state_t *state, void *user_data);
 // ── Layers ───────────────────────────────────────────────────────────────────
 enum layers { MAC_BASE, MAC_FN, WIN_BASE, WIN_FN };
 
-#define LCKSCR LCTL(LGUI(KC_Q))
+#include "shared_macros.h"
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [MAC_BASE] = LAYOUT_iso_85(
