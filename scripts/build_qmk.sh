@@ -25,10 +25,11 @@ FIRMWARE_DIR="${REPO_ROOT}/.qmk_${REPO_SLUG}"
 
 # QMK names output files as <keyboard_underscored>_<keymap>.<ext>
 KEYBOARD_SLUG="$(echo "$KEYBOARD" | tr '/' '_')"
+mkdir -p "$REPO_ROOT/firmware"
 EXISTING_FW="$(find "$REPO_ROOT/firmware" -maxdepth 1 \
   \( -name "${KEYBOARD_SLUG}_${KEYMAP}.hex" \
   -o -name "${KEYBOARD_SLUG}_${KEYMAP}.bin" \
-  -o -name "${KEYBOARD_SLUG}_${KEYMAP}.uf2" \) 2>/dev/null | head -1)"
+  -o -name "${KEYBOARD_SLUG}_${KEYMAP}.uf2" \) 2>/dev/null | head -1 || true)"
 
 # If flashing and a binary already exists, skip straight to flash.
 if [ "$ACTION" = "flash" ] && [ -n "$EXISTING_FW" ]; then
