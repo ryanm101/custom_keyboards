@@ -57,7 +57,8 @@ jobs:
             python3-pip \
             python3-setuptools \
             git \
-            jq
+            jq \
+            dfu-util
           python3 -m pip install --user qmk
 
       - name: Build ${{ matrix.keyboard }}
