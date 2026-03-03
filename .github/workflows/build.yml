@@ -4,9 +4,7 @@ on:
   push:
     branches: ["main", "master"]
     paths:
-      - "keyboards/**"
-      - "layouts/**"
-      - "qmk.json"
+      - "qmk/**"
       - "scripts/**"
       - ".github/workflows/build.yml"
   pull_request:
@@ -30,7 +28,7 @@ jobs:
             repo:     .repo,
             ref:      .ref,
             name:     (.keyboard | gsub("/"; "_"))
-          }]' qmk.json)
+          }]' qmk/qmk.json)
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   build:
@@ -61,13 +59,13 @@ jobs:
 
       - name: Build ${{ matrix.keyboard }}
         run: |
-          chmod +x scripts/build_keyboard.sh
-          bash scripts/build_keyboard.sh \
+          chmod +x scripts/build_qmk.sh
+          bash scripts/build_qmk.sh \
             "${{ matrix.keyboard }}" \
             "${{ matrix.keymap }}" \
             "${{ matrix.repo }}" \
             "${{ matrix.ref }}" \
-            "${{ matrix.type }}" \
+            "$GITHUB_WORKSPACE/qmk" \
             "$GITHUB_WORKSPACE"
 
       - name: Upload firmware
@@ -97,7 +95,7 @@ jobs:
           name: "Build #${{ github.run_number }}"
           body: |
             Automated firmware build from commit ${{ github.sha }}.
-            Per-board versions are defined in [qmk.json](https://github.com/${{ github.repository }}/blob/master/qmk.json).
+            Per-board versions are defined in [qmk.json](https://github.com/${{ github.repository }}/blob/master/qmk/qmk.json).
           files: all_firmware/*
           fail_on_unmatched_files: false
         env:

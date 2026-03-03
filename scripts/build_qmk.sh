@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# scripts/build_keyboard.sh — Build (or flash) a single keyboard
-# Usage: ./build_keyboard.sh <keyboard> <keymap> <repo> <ref> <userspace_dir> [action]
+# scripts/build_qmk.sh — Build (or flash) a single QMK keyboard
+# Usage: ./build_qmk.sh <keyboard> <keymap> <repo> <ref> <qmk_dir> <repo_root> [action]
 #   action: build (default) | flash
 #
 # When action=flash and a firmware file already exists in firmware/, the build
@@ -16,15 +16,16 @@ KEYMAP="${2}"
 REPO="${3}"
 REF="${4}"
 USERSPACE_DIR="${5:-$(pwd)}"
-ACTION="${6:-build}"
+REPO_ROOT="${6:-$(dirname "$USERSPACE_DIR")}"
+ACTION="${7:-build}"
 
 # Derive a slug from the repo URL so boards on the same repo share one clone.
 REPO_SLUG="$(echo "$REPO" | sed 's|https\?://||; s|[^a-zA-Z0-9]|_|g' | cut -c1-50)"
-FIRMWARE_DIR="${USERSPACE_DIR}/.qmk_${REPO_SLUG}"
+FIRMWARE_DIR="${REPO_ROOT}/.qmk_${REPO_SLUG}"
 
 # QMK names output files as <keyboard_underscored>_<keymap>.<ext>
 KEYBOARD_SLUG="$(echo "$KEYBOARD" | tr '/' '_')"
-EXISTING_FW="$(find "$USERSPACE_DIR/firmware" -maxdepth 1 \
+EXISTING_FW="$(find "$REPO_ROOT/firmware" -maxdepth 1 \
   \( -name "${KEYBOARD_SLUG}_${KEYMAP}.hex" \
   -o -name "${KEYBOARD_SLUG}_${KEYMAP}.bin" \
   -o -name "${KEYBOARD_SLUG}_${KEYMAP}.uf2" \) 2>/dev/null | head -1)"
@@ -83,8 +84,8 @@ else
 fi
 
 # Collect firmware output
-mkdir -p "$USERSPACE_DIR/firmware"
+mkdir -p "$REPO_ROOT/firmware"
 find "$FIRMWARE_DIR" -maxdepth 1 \( -name "*.hex" -o -name "*.bin" -o -name "*.uf2" \) \
-  -exec cp {} "$USERSPACE_DIR/firmware/" \; 2>/dev/null || true
+  -exec cp {} "$REPO_ROOT/firmware/" \; 2>/dev/null || true
 
 echo "✓ Done: $KEYBOARD:$KEYMAP"

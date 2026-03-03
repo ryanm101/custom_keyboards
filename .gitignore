@@ -11,6 +11,12 @@
 # Local QMK firmware clones (shared, repo-root cache)
 .qmk_*/
 
+# Local ZMK build cache (Docker-based)
+.zmk_cache/
+
+# Built firmware output
+firmware/
+
 # Local QMK config overrides
 .qmk/
 

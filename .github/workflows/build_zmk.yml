@@ -1,0 +1,61 @@
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "zmk/**"
+  pull_request:
+    paths:
+      - "zmk/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.3.0
+    with:
+      config_path: zmk/cck_ball/config
+      build_matrix_path: zmk/cck_ball/build.yaml
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/') && contains(github.ref, '-zmk_')
+    permissions:
+      contents: write
+    steps:
+      - name: Extract version info
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          ZMK_VERSION=${TAG##*-zmk_}
+          echo "zmk_version=$ZMK_VERSION" >> $GITHUB_OUTPUT
+          RELEASE_VERSION=${TAG%%-zmk_*}
+          echo "release_version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download firmware artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware
+          path: firmware
+
+      - name: Rename firmware files with ZMK version
+        run: |
+          mkdir firmware-release
+          cd firmware
+          for file in *; do
+            ext="${file##*.}"
+            name="${file%.*}"
+            cp "$file" "../firmware-release/${name}-zmk_${{ steps.version.outputs.zmk_version }}.${ext}"
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: firmware-release/*
+          name: Release ${{ steps.version.outputs.tag }}
+          body: |
+            ## CCK-BALL Firmware Release ${{ steps.version.outputs.release_version }}
+            **ZMK Version:** ${{ steps.version.outputs.zmk_version }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
