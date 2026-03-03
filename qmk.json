@@ -25,14 +25,5 @@
       "repo": "https://github.com/Keychron/qmk_firmware.git",
       "ref": "bluetooth_playground"
     }
-  ],
-  "layouts": [
-    {
-      "layout": "ortho_4x12",
-      "keymap": "ryanm101",
-      "repo": "https://github.com/qmk/qmk_firmware.git",
-      "ref": "master",
-      "note": "Specify target board at build time: make ortho KB=<board>"
-    }
   ]
 }

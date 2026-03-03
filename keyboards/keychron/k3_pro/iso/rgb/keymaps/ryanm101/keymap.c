@@ -1,22 +1,15 @@
 // Copyright 2023 ryanm101
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+// Keychron K3 Pro ISO RGB — ryanm101 keymap
+// Function implementations live in users/ryanm101/tap_dances.c (compiled via
+// rules.mk).
+
 #include QMK_KEYBOARD_H
 
-enum layers { MAC_BASE, MAC_FN, WIN_BASE, WIN_FN };
-
-#define LCKSCR LCTL(LGUI(KC_Q))
-
-// Tap Dance
-#define COLON TD(CLN)
-#define QUOTE TD(QUOT)
-#define CADCAE TD(CAD_CAE)
-#define PARAN TD(PAR)
-#define CURLY TD(CUR)
-#define SQUAR TD(SQU)
-#define ANGUL TD(ANG)
-#define TMUX TD(TD_TMUX)
-
+// ── Tap Dance ────────────────────────────────────────────────────────────────
+// Inline enum + aliases so keymap_introspection.c can resolve them regardless
+// of how the Keychron fork sets up TAP_DANCE_ENABLE at its include point.
 enum {
   CLN = 0,
   QUOT,
@@ -27,6 +20,35 @@ enum {
   ANG,
   TD_TMUX,
 };
+
+// Fallback for QMK 0.14 introspection which runs without TAP_DANCE_ENABLE
+#ifndef TD
+#define TD(n) (QK_TAP_DANCE | ((n) & 0xFF))
+#endif
+
+#define COLON TD(CLN)
+#define QUOTE TD(QUOT)
+#define CADCAE TD(CAD_CAE)
+#define PARAN TD(PAR)
+#define CURLY TD(CUR)
+#define SQUAR TD(SQU)
+#define ANGUL TD(ANG)
+#define TMUX TD(TD_TMUX)
+
+// Forward declarations — implementations in users/ryanm101/tap_dances.c
+#ifdef TAP_DANCE_ENABLE
+void paranthesis_dance(tap_dance_state_t *state, void *user_data);
+void curly_dance(tap_dance_state_t *state, void *user_data);
+void square_dance(tap_dance_state_t *state, void *user_data);
+void angular_dance(tap_dance_state_t *state, void *user_data);
+void tmux_dance(tap_dance_state_t *state, void *user_data);
+void cmd_dance(tap_dance_state_t *state, void *user_data);
+#endif
+
+// ── Layers ───────────────────────────────────────────────────────────────────
+enum layers { MAC_BASE, MAC_FN, WIN_BASE, WIN_FN };
+
+#define LCKSCR LCTL(LGUI(KC_Q))
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [MAC_BASE] = LAYOUT_iso_85(
@@ -77,87 +99,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
         KC_TRNS, KC_TRNS, BAT_LVL, NK_TOGG, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS)};
+        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS),
+};
 
-// Parentheses
-void paranthesis_dance(tap_dance_state_t *state, void *user_data) {
-  if (state->count == 1) {
-    SEND_STRING("()");
-    register_code(KC_LEFT);
-    unregister_code(KC_LEFT);
-  } else if (state->count == 2) {
-    SEND_STRING("(");
-  } else if (state->count == 3) {
-    SEND_STRING(")");
-  }
-}
-void curly_dance(tap_dance_state_t *state, void *user_data) {
-  if (state->count == 1) {
-    SEND_STRING("{}");
-    register_code(KC_LEFT);
-    unregister_code(KC_LEFT);
-  } else if (state->count == 2) {
-    SEND_STRING("{");
-  } else if (state->count == 3) {
-    SEND_STRING("}");
-  }
-}
-void square_dance(tap_dance_state_t *state, void *user_data) {
-  if (state->count == 1) {
-    SEND_STRING("[]");
-    register_code(KC_LEFT);
-    unregister_code(KC_LEFT);
-  } else if (state->count == 2) {
-    SEND_STRING("[");
-  } else if (state->count == 3) {
-    SEND_STRING("]");
-  }
-}
-void angular_dance(tap_dance_state_t *state, void *user_data) {
-  if (state->count == 1) {
-    SEND_STRING("<>");
-    register_code(KC_LEFT);
-    unregister_code(KC_LEFT);
-  } else if (state->count == 2) {
-    SEND_STRING("<");
-  } else if (state->count == 3) {
-    SEND_STRING(">");
-  }
-}
-void tmux_dance(tap_dance_state_t *state, void *user_data) {
-  if (state->count == 1) {
-    SEND_STRING("tmux");
-    register_code(KC_ENT);
-    unregister_code(KC_ENT);
-  } else if (state->count == 2) {
-    register_mods(MOD_BIT(KC_LCTL));
-    register_code(KC_B);
-    unregister_code(KC_B);
-    unregister_mods(MOD_BIT(KC_LCTL));
-    register_mods(MOD_BIT(KC_LSFT));
-    register_code(KC_5);
-    unregister_code(KC_5);
-    unregister_mods(MOD_BIT(KC_LSFT));
-  }
-}
-void cmd_dance(tap_dance_state_t *state, void *user_data) {
-  if (state->count == 1) {
-    register_mods(MOD_BIT(KC_LCTL));
-    register_mods(MOD_BIT(KC_LALT));
-    register_code(KC_DELETE);
-    unregister_mods(MOD_BIT(KC_LCTL));
-    unregister_mods(MOD_BIT(KC_LALT));
-    unregister_code(KC_DELETE);
-  } else if (state->count == 2) {
-    register_mods(MOD_BIT(KC_LGUI));
-    register_mods(MOD_BIT(KC_LALT));
-    register_code(KC_ESC);
-    unregister_mods(MOD_BIT(KC_LGUI));
-    unregister_mods(MOD_BIT(KC_LALT));
-    unregister_code(KC_ESC);
-  }
-}
-
+#ifdef TAP_DANCE_ENABLE
 tap_dance_action_t tap_dance_actions[] = {
     [CLN] = ACTION_TAP_DANCE_DOUBLE(KC_SCLN, S(KC_SCLN)),
     [QUOT] = ACTION_TAP_DANCE_DOUBLE(KC_QUOT, S(KC_2)),
@@ -168,3 +113,4 @@ tap_dance_action_t tap_dance_actions[] = {
     [ANG] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, NULL, angular_dance),
     [TD_TMUX] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, NULL, tmux_dance),
 };
+#endif

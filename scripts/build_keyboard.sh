@@ -64,6 +64,15 @@ echo "→ Copying keymap ..."
 mkdir -p "$KEYMAP_DST"
 cp -r "$KEYMAP_SRC/." "$KEYMAP_DST/"
 
+# Copy shared userspace (tap dances, shared rules, etc.)
+USERS_SRC="$USERSPACE_DIR/users/$KEYMAP"
+USERS_DST="$FIRMWARE_DIR/users/$KEYMAP"
+if [ -d "$USERS_SRC" ]; then
+  echo "→ Copying userspace ($KEYMAP) ..."
+  mkdir -p "$USERS_DST"
+  cp -r "$USERS_SRC/." "$USERS_DST/"
+fi
+
 # Build or build+flash
 if [ "$ACTION" = "flash" ]; then
   echo "→ Compiling + flashing (put keyboard in bootloader mode now) ..."

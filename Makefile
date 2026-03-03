@@ -9,15 +9,9 @@ endef
 define board_ref
 $(shell jq -r '.keyboards[] | select(.keyboard == "$(1)") | .ref' $(QMK_JSON))
 endef
-define layout_repo
-$(shell jq -r '.layouts[] | select(.layout == "$(1)") | .repo' $(QMK_JSON))
-endef
-define layout_ref
-$(shell jq -r '.layouts[] | select(.layout == "$(1)") | .ref' $(QMK_JSON))
-endef
 
-.PHONY: all jj40 discipline winry315 k3pro ortho \
-        flash-jj40 flash-discipline flash-winry315 flash-k3pro flash-ortho \
+.PHONY: all jj40 discipline winry315 k3pro \
+        flash-jj40 flash-discipline flash-winry315 flash-k3pro \
         clean clean-cache help
 
 help: ## Show this help and per-board config
@@ -61,16 +55,6 @@ k3pro: ## Build Keychron K3 Pro (separate Keychron fork clone)
 		"$(call board_ref,keychron/k3_pro/iso/rgb)" \
 		"$(USERSPACE_DIR)"
 
-ortho: ## Build ortho_4x12 layout (requires KB=<board>, e.g. make ortho KB=planck/rev6)
-ifndef KB
-	$(error KB is not set. Usage: make ortho KB=<keyboard_that_supports_ortho_4x12>)
-endif
-	bash scripts/build_keyboard.sh \
-		"$(KB)" \
-		"$(KEYMAP)" \
-		"$(call layout_repo,ortho_4x12)" \
-		"$(call layout_ref,ortho_4x12)" \
-		"$(USERSPACE_DIR)"
 
 # ── Flash targets ──────────────────────────────────────────────────────────────
 # Put the keyboard into bootloader mode before running these.
@@ -107,16 +91,6 @@ flash-k3pro: ## Flash Keychron K3 Pro
 		"$(call board_ref,keychron/k3_pro/iso/rgb)" \
 		"$(USERSPACE_DIR)" flash
 
-flash-ortho: ## Flash ortho_4x12 layout (requires KB=<board>)
-ifndef KB
-	$(error KB is not set. Usage: make flash-ortho KB=<board>)
-endif
-	bash scripts/build_keyboard.sh \
-		"$(KB)" \
-		"$(KEYMAP)" \
-		"$(call layout_repo,ortho_4x12)" \
-		"$(call layout_ref,ortho_4x12)" \
-		"$(USERSPACE_DIR)" flash
 
 clean: ## Remove built firmware files
 	@rm -f firmware/*.hex firmware/*.bin firmware/*.uf2
