@@ -32,5 +32,3 @@ firmware/
 .vscode/
 *.swp
 *~
-
-.qmk_*_git/
