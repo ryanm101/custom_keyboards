@@ -5,6 +5,11 @@
 *.elf
 *.map
 
+
+# Python virtual environments
+.venv/
+__pycache__/
+
 # QMK build artifacts
 .build/
 
@@ -27,3 +32,5 @@ firmware/
 .vscode/
 *.swp
 *~
+
+.qmk_*_git/
