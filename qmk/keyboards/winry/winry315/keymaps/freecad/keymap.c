@@ -65,7 +65,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
    *  Encoder rotation:
    *    Enc0 CW/CCW  → Zoom in / out   (mouse scroll)
    *    Enc1 CW/CCW  → Redo / Undo     (Ctrl+Y / Ctrl+Z)
-   *    Enc2 CW/CCW  → Pan right / left (mouse H-scroll)
+   *    Enc2 CW/CCW  → Pan right / left (Shift+scroll up/down)
    */
   [_NAV] = LAYOUT_top(
     /* enc buttons */  VC_VF,      LCTL(KC_R), KC_SPC,
@@ -145,8 +145,8 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
     return false;
 
   case 2:
-    // Enc2 (right knob): Pan — horizontal scroll
-    tap_code16(clockwise ? QK_MOUSE_WHEEL_RIGHT : QK_MOUSE_WHEEL_LEFT);
+    // Enc2 (right knob): Pan — Shift+scroll (FreeCAD default pan binding)
+    tap_code16(clockwise ? S(QK_MOUSE_WHEEL_UP) : S(QK_MOUSE_WHEEL_DOWN));
     return false;
   }
 

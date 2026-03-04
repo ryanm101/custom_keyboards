@@ -53,7 +53,7 @@ help: ## Show this help and per-board config
 
 all: all-qmk all-zmk ## Build all boards (QMK + ZMK)
 
-all-qmk: jj40 discipline winry315 winry315-freecad k3pro ## Build all QMK boards
+all-qmk: jj40 discipline winry315 winry315-freecad winry315-fusion360 k3pro ## Build all QMK boards
 
 all-zmk: cck-ball ## Build all ZMK boards
 
@@ -79,6 +79,27 @@ flash-winry315-freecad: ## Flash winry/winry315 freecad keymap  [put board in bo
 	bash scripts/build_qmk.sh \
 		"winry/winry315" \
 		"freecad" \
+		"$(call board_repo,winry/winry315)" \
+		"$(call board_ref,winry/winry315)" \
+		"$(QMK_DIR)" \
+		"$(REPO_ROOT)" flash
+
+# winry315 fusion360 keymap — overrides the default KEYMAP
+.PHONY: winry315-fusion360 flash-winry315-fusion360
+
+winry315-fusion360: ## Build winry/winry315 with fusion360 keymap
+	bash scripts/build_qmk.sh \
+		"winry/winry315" \
+		"fusion360" \
+		"$(call board_repo,winry/winry315)" \
+		"$(call board_ref,winry/winry315)" \
+		"$(QMK_DIR)" \
+		"$(REPO_ROOT)"
+
+flash-winry315-fusion360: ## Flash winry/winry315 fusion360 keymap  [put board in bootloader first]
+	bash scripts/build_qmk.sh \
+		"winry/winry315" \
+		"fusion360" \
 		"$(call board_repo,winry/winry315)" \
 		"$(call board_ref,winry/winry315)" \
 		"$(QMK_DIR)" \
