@@ -78,13 +78,17 @@ fi
 
 # Install repo-specific Python dependencies (needed for Keychron fork etc.)
 if [ -f "$FIRMWARE_DIR/requirements.txt" ]; then
-  echo "→ Creating uv virtual environment for Python dependencies ..."
-  # --clear avoids the interactive 'replace venv?' prompt
-  uv venv "$FIRMWARE_DIR/.venv" --clear --quiet
-  echo "→ Installing Python dependencies via uv ..."
-  # Activate first, then install (no deprecated -p flag)
-  source "$FIRMWARE_DIR/.venv/bin/activate"
-  uv pip install -r "$FIRMWARE_DIR/requirements.txt" --quiet
+  if command -v uv &>/dev/null; then
+    echo "→ Creating venv via uv ..."
+    uv venv "$FIRMWARE_DIR/.venv" --clear --quiet
+    source "$FIRMWARE_DIR/.venv/bin/activate"
+    uv pip install -r "$FIRMWARE_DIR/requirements.txt" --quiet
+  else
+    echo "→ uv not found; falling back to python3 -m venv + pip ..."
+    python3 -m venv "$FIRMWARE_DIR/.venv"
+    source "$FIRMWARE_DIR/.venv/bin/activate"
+    pip install -r "$FIRMWARE_DIR/requirements.txt" --quiet
+  fi
 fi
 
 # Copy our keymap into firmware tree
